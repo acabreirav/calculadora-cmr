@@ -50,8 +50,7 @@ financiero oficial.
 
 ## Despliegue
 
-La app está pensada para publicarse en [Vercel](https://vercel.com) (framework
-preset **Vite**, build `npm run build`, output `dist`). Cada push a `main`
-redesplega automáticamente.
+La app está publicada en Vercel (framework preset **Vite**, build
+`npm run build`, output `dist`). Cada push redesplega automáticamente.
 
-<!-- URL de producción (Vercel): pendiente de configurar por el usuario -->
+**URL de producción:** https://calculadora-cmr.vercel.app/
