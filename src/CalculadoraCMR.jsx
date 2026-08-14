@@ -102,8 +102,10 @@ export default function CalculadoraCMR() {
 
   const best = useMemo(() => bestBuyNow(balance, pond), [balance, pond]);
   const esperar = balance * pond;
-  const gain = best.clp + best.leftoverPts * pond - esperar;
+  const buyTotal = best.clp + best.leftoverPts * pond;
+  const gain = buyTotal - esperar;
   const actuar = gain > 1;
+  const winner = gain > 1 ? "buy" : gain < -1 ? "wait" : "tie";
 
   const affordable = CARDS.filter((c) => c.pts <= balance);
   const breakeven = affordable.length ? Math.max(...affordable.map((c) => c.clp / c.pts)) : null;
@@ -112,11 +114,24 @@ export default function CalculadoraCMR() {
     <div className="wrap">
       <style>{`
         .wrap{
-          --paper:#FBFAF5; --ink:#182A22; --ink-soft:#5C6B63;
+          --paper:#FBFAF5; --surface:#ffffff; --ink:#182A22; --ink-soft:#5C6B63;
           --line:rgba(24,42,34,.14); --line-soft:rgba(24,42,34,.07);
-          --buy:#1E8A4C; --buy-bg:#EAF5EE; --wait:#6B4C9A; --wait-bg:#F0ECF6; --gold:#B67A22;
+          --buy:#1E8A4C; --buy-bg:#EAF5EE; --buy-head:#0f5c30;
+          --wait:#6B4C9A; --wait-bg:#F0ECF6; --wait-head:#4a3170;
+          --gold:#B67A22; --gold-bg:#FBF2E3; --gold-line:rgba(182,122,34,.32);
+          --pop-bg:#182A22; --pop-fg:#F3F1EA; --shadow:rgba(24,42,34,.22);
           font-family:'Inter',system-ui,-apple-system,sans-serif; color:var(--ink);
           background:var(--paper); padding:30px 20px 40px; min-height:100%; -webkit-font-smoothing:antialiased;
+        }
+        @media (prefers-color-scheme: dark){
+          .wrap{
+            --paper:#12161A; --surface:#1B2026; --ink:#E7EDEA; --ink-soft:#94A39B;
+            --line:rgba(255,255,255,.13); --line-soft:rgba(255,255,255,.06);
+            --buy:#41B776; --buy-bg:rgba(65,183,118,.14); --buy-head:#7BE3A6;
+            --wait:#AD8FDA; --wait-bg:rgba(173,143,218,.15); --wait-head:#CBB2F0;
+            --gold:#D99C43; --gold-bg:rgba(217,156,67,.13); --gold-line:rgba(217,156,67,.34);
+            --pop-bg:#2A3138; --pop-fg:#EDF1EE; --shadow:rgba(0,0,0,.5);
+          }
         }
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
         .inner{max-width:560px;margin:0 auto;}
@@ -127,7 +142,7 @@ export default function CalculadoraCMR() {
         h1{font-family:'Fraunces',serif;font-weight:600;line-height:1.08;
           font-size:clamp(24px,5.4vw,32px);margin:11px 0 22px;letter-spacing:-.01em;}
 
-        .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;}
+        .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;}
         .field{display:flex;flex-direction:column;gap:8px;}
         .field + .field{margin-top:18px;}
         .field-label{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;}
@@ -151,9 +166,9 @@ export default function CalculadoraCMR() {
           cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;}
         .help-btn:hover{border-color:var(--ink);color:var(--ink);}
         .help-pop{position:absolute;top:22px;left:50%;transform:translateX(-50%);z-index:5;
-          width:min(260px,72vw);background:var(--ink);color:#F3F1EA;font-size:12px;font-weight:400;
+          width:min(260px,72vw);background:var(--pop-bg);color:var(--pop-fg);font-size:12px;font-weight:400;
           line-height:1.5;border-radius:10px;padding:11px 13px;cursor:pointer;
-          box-shadow:0 8px 24px rgba(24,42,34,.22);}
+          box-shadow:0 8px 24px var(--shadow);}
 
         .reco{border-radius:16px;padding:22px;border:1.5px solid;margin-top:16px;
           display:flex;flex-direction:column;}
@@ -163,25 +178,46 @@ export default function CalculadoraCMR() {
           text-transform:uppercase;color:var(--ink-soft);}
         .reco-head{font-family:'Fraunces',serif;font-weight:600;line-height:1;letter-spacing:-.01em;
           font-size:clamp(28px,6.4vw,40px);margin:4px 0 8px;}
-        .reco.buy .reco-head{color:#0f5c30;} .reco.wait .reco-head{color:#4a3170;}
+        .reco.buy .reco-head{color:var(--buy-head);} .reco.wait .reco-head{color:var(--wait-head);}
         .reco-action{font-size:15px;line-height:1.5;color:var(--ink);}
         .reco-action b{font-weight:600;}
         .reco-metric{margin-top:14px;align-self:flex-start;font-family:'IBM Plex Mono',monospace;
-          font-size:13px;font-weight:600;background:#fff;border:1px solid var(--line);
+          font-size:13px;font-weight:600;background:var(--surface);border:1px solid var(--line);
           border-radius:999px;padding:6px 13px;}
         .reco.buy .reco-metric{color:var(--buy);} .reco.wait .reco-metric{color:var(--wait);}
 
         .consejo{margin-top:14px;display:flex;gap:11px;align-items:flex-start;
-          background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+          background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
         .consejo .ico{flex:none;width:22px;height:22px;border-radius:50%;background:var(--gold);
           color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
         .consejo p{margin:0;font-size:14px;line-height:1.55;color:var(--ink-soft);}
         .consejo b{color:var(--ink);}
         .consejo .be{font-family:'IBM Plex Mono',monospace;color:var(--gold);font-weight:600;}
 
+        .desglose{margin-top:16px;}
+        .desglose-head{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;
+          text-transform:uppercase;color:var(--ink-soft);}
+        .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+          gap:10px;margin-top:9px;}
+        .opt{position:relative;background:var(--surface);border:1px solid var(--line);
+          border-radius:14px;padding:15px 16px;display:flex;flex-direction:column;gap:4px;}
+        .opt.buy.win{border-color:var(--buy);background:var(--buy-bg);}
+        .opt.wait.win{border-color:var(--wait);background:var(--wait-bg);}
+        .opt-label{font-size:12px;font-weight:600;color:var(--ink-soft);}
+        .opt-val{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;
+          letter-spacing:-.01em;line-height:1.1;}
+        .opt.buy.win .opt-val{color:var(--buy-head);}
+        .opt.wait.win .opt-val{color:var(--wait-head);}
+        .opt-sub{font-size:12px;line-height:1.45;color:var(--ink-soft);}
+        .opt-tag{position:absolute;top:12px;right:12px;font-family:'IBM Plex Mono',monospace;
+          font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+          border-radius:999px;padding:3px 8px;}
+        .opt.buy .opt-tag{color:var(--buy);background:var(--surface);border:1px solid var(--buy);}
+        .opt.wait .opt-tag{color:var(--wait);background:var(--surface);border:1px solid var(--wait);}
+
         .vigencia{display:inline-flex;align-items:center;gap:7px;margin:12px 0 0;
           font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;
-          color:var(--gold);background:#FBF2E3;border:1px solid rgba(182,122,34,.32);
+          color:var(--gold);background:var(--gold-bg);border:1px solid var(--gold-line);
           border-radius:999px;padding:5px 12px;}
         .vigencia .pulse{width:7px;height:7px;border-radius:50%;background:var(--gold);
           box-shadow:0 0 0 0 rgba(182,122,34,.5);animation:pulse 2.4s infinite;}
@@ -190,14 +226,18 @@ export default function CalculadoraCMR() {
 
         .share-btn{margin:22px auto 0;display:flex;align-items:center;justify-content:center;gap:8px;
           font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--ink);
-          background:#fff;border:1px solid var(--line);border-radius:999px;padding:10px 20px;
+          background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:10px 20px;
           cursor:pointer;transition:border-color .15s,transform .05s;}
         .share-btn:hover{border-color:var(--ink-soft);}
         .share-btn:active{transform:scale(.98);}
         .share-btn.ok{color:var(--buy);border-color:var(--buy);background:var(--buy-bg);}
         .share-btn svg{width:15px;height:15px;}
 
-        .footer{margin-top:22px;text-align:center;font-size:13px;color:var(--ink-soft);
+        .fuente{margin:16px 0 0;text-align:center;font-size:12px;line-height:1.5;color:var(--ink-soft);}
+        .fuente a{color:var(--gold);font-weight:600;text-decoration:none;border-bottom:1px solid var(--gold-line);}
+        .fuente a:hover{border-bottom-color:var(--gold);}
+
+        .footer{margin-top:14px;text-align:center;font-size:13px;color:var(--ink-soft);
           letter-spacing:.01em;}
         .footer .heart{color:var(--wait);}
       `}</style>
@@ -288,6 +328,35 @@ export default function CalculadoraCMR() {
           )}
         </div>
 
+        <div className="desglose">
+          <span className="desglose-head">El desglose · valor total de tus puntos</span>
+          <div className="opts">
+            <div className={`opt buy ${winner === "buy" ? "win" : ""}`}>
+              <span className="opt-label">Canjear hoy</span>
+              <span className="opt-val">{clpFmt.format(Math.round(buyTotal))}</span>
+              <span className="opt-sub">
+                {best.clp > 0 ? (
+                  <>{clpFmt.format(best.clp)} en gift cards</>
+                ) : (
+                  <>Sin canjes convenientes</>
+                )}
+                {best.leftoverPts > 0 && (
+                  <> + {numFmt.format(best.leftoverPts)} pts guardados</>
+                )}
+              </span>
+              {winner === "buy" && <span className="opt-tag">Conviene</span>}
+            </div>
+            <div className={`opt wait ${winner === "wait" ? "win" : ""}`}>
+              <span className="opt-label">Esperar el cambio</span>
+              <span className="opt-val">{clpFmt.format(Math.round(esperar))}</span>
+              <span className="opt-sub">
+                {numFmt.format(balance)} pts × ×{pond.toFixed(2)}
+              </span>
+              {winner === "wait" && <span className="opt-tag">Conviene</span>}
+            </div>
+          </div>
+        </div>
+
         <div className="consejo">
           <span className="ico">✦</span>
           {breakeven ? (
@@ -330,6 +399,13 @@ export default function CalculadoraCMR() {
             </>
           )}
         </button>
+
+        <p className="fuente">
+          Datos de gift cards y ponderador supuestos según lo publicado por el banco.{" "}
+          <a href="https://www.bancofalabella.cl/cmrpuntos" target="_blank" rel="noopener noreferrer">
+            Ver fuente oficial ↗
+          </a>
+        </p>
 
         <footer className="footer">
           Done with <span className="heart">❤</span> by Álvaro Cabreira
