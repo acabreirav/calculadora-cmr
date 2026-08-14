@@ -78,6 +78,27 @@ function HelpTip({ text }) {
 export default function CalculadoraCMR() {
   const [balance, setBalance] = useState(120000);
   const [pond, setPond] = useState(1.5);
+  const [copiado, setCopiado] = useState(false);
+
+  const compartir = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const data = {
+      title: "Calculadora CMR",
+      text: "¿Comprar gift card hoy o esperar el cambio de puntos CMR? Calcúlalo aquí:",
+      url,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(data);
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      /* usuario canceló o navegador sin permisos: no hacemos nada */
+    }
+  };
 
   const best = useMemo(() => bestBuyNow(balance, pond), [balance, pond]);
   const esperar = balance * pond;
@@ -158,13 +179,34 @@ export default function CalculadoraCMR() {
         .consejo b{color:var(--ink);}
         .consejo .be{font-family:'IBM Plex Mono',monospace;color:var(--gold);font-weight:600;}
 
-        .footer{margin-top:26px;text-align:center;font-size:13px;color:var(--ink-soft);
+        .vigencia{display:inline-flex;align-items:center;gap:7px;margin:12px 0 0;
+          font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;
+          color:var(--gold);background:#FBF2E3;border:1px solid rgba(182,122,34,.32);
+          border-radius:999px;padding:5px 12px;}
+        .vigencia .pulse{width:7px;height:7px;border-radius:50%;background:var(--gold);
+          box-shadow:0 0 0 0 rgba(182,122,34,.5);animation:pulse 2.4s infinite;}
+        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(182,122,34,.5);}
+          70%{box-shadow:0 0 0 7px rgba(182,122,34,0);}100%{box-shadow:0 0 0 0 rgba(182,122,34,0);}}
+
+        .share-btn{margin:22px auto 0;display:flex;align-items:center;justify-content:center;gap:8px;
+          font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--ink);
+          background:#fff;border:1px solid var(--line);border-radius:999px;padding:10px 20px;
+          cursor:pointer;transition:border-color .15s,transform .05s;}
+        .share-btn:hover{border-color:var(--ink-soft);}
+        .share-btn:active{transform:scale(.98);}
+        .share-btn.ok{color:var(--buy);border-color:var(--buy);background:var(--buy-bg);}
+        .share-btn svg{width:15px;height:15px;}
+
+        .footer{margin-top:22px;text-align:center;font-size:13px;color:var(--ink-soft);
           letter-spacing:.01em;}
         .footer .heart{color:var(--wait);}
       `}</style>
 
       <div className="inner">
         <div className="eyebrow"><span className="dot" /> CMR Falabella</div>
+        <div className="vigencia">
+          <span className="pulse" /> El cambio entra en vigencia en septiembre 2026
+        </div>
         <h1>
           ¿Comprar gift card hoy o esperar el cambio?{" "}
           <HelpTip text="Tras el cambio, cada punto valdrá $1 multiplicado por tu ponderador personalizado. Esto compara ese valor con canjear una gift card hoy, donde las tarjetas grandes rinden hasta $5 por punto." />
@@ -261,6 +303,33 @@ export default function CalculadoraCMR() {
             </p>
           )}
         </div>
+
+        <button
+          type="button"
+          className={`share-btn ${copiado ? "ok" : ""}`}
+          onClick={compartir}
+        >
+          {copiado ? (
+            <>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              ¡Link copiado!
+            </>
+          ) : (
+            <>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.6" y1="10.5" x2="15.4" y2="6.5" />
+                <line x1="8.6" y1="13.5" x2="15.4" y2="17.5" />
+              </svg>
+              Compartir calculadora
+            </>
+          )}
+        </button>
 
         <footer className="footer">
           Done with <span className="heart">❤</span> by Álvaro Cabreira
