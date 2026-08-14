@@ -157,6 +157,10 @@ export default function CalculadoraCMR() {
         .consejo p{margin:0;font-size:14px;line-height:1.55;color:var(--ink-soft);}
         .consejo b{color:var(--ink);}
         .consejo .be{font-family:'IBM Plex Mono',monospace;color:var(--gold);font-weight:600;}
+
+        .footer{margin-top:26px;text-align:center;font-size:13px;color:var(--ink-soft);
+          letter-spacing:.01em;}
+        .footer .heart{color:var(--wait);}
       `}</style>
 
       <div className="inner">
@@ -257,6 +261,10 @@ export default function CalculadoraCMR() {
             </p>
           )}
         </div>
+
+        <footer className="footer">
+          Done with <span className="heart">❤</span> by Álvaro Cabreira
+        </footer>
       </div>
     </div>
   );
