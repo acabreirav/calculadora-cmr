@@ -77,7 +77,7 @@ function HelpTip({ text }) {
 }
 
 export default function CalculadoraCMR() {
-  const [balance, setBalance] = useState(120000);
+  const [balance, setBalance] = useState(50000);
   const [pond, setPond] = useState(1.5);
   const [copiado, setCopiado] = useState(false);
 
