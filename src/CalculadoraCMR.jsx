@@ -78,7 +78,7 @@ function HelpTip({ text }) {
 
 export default function CalculadoraCMR() {
   const [balance, setBalance] = useState(50000);
-  const [pond, setPond] = useState(1.5);
+  const [pond, setPond] = useState(4.25);
   const [copiado, setCopiado] = useState(false);
 
   // Marca "sí usó la calculadora" una sola vez por sesión (mide interacción real).
@@ -284,7 +284,7 @@ export default function CalculadoraCMR() {
           <div className="field">
             <span className="field-label">
               Ponderador
-              <HelpTip text="El multiplicador que el banco aplicará según tu consumo (de ×1 a ×5, en saltos de 0,25). Si aún no lo conoces, prueba distintos valores." />
+              <HelpTip text="El multiplicador que el banco aplicará a tus puntos acumulados el día del cambio (ej.: ×4,25). Aparece en tu correo «Novedades en tus CMR Puntos». Si aún no lo conoces, prueba distintos valores." />
             </span>
             <div className="slider-row">
               <input
