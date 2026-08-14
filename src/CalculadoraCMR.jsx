@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { track } from "@vercel/analytics";
 
 /**
  * Calculadora CMR — ¿Comprar gift card hoy o esperar el cambio?
@@ -80,6 +81,14 @@ export default function CalculadoraCMR() {
   const [pond, setPond] = useState(1.5);
   const [copiado, setCopiado] = useState(false);
 
+  // Marca "sí usó la calculadora" una sola vez por sesión (mide interacción real).
+  const interactuo = useRef(false);
+  const marcarInteraccion = () => {
+    if (interactuo.current) return;
+    interactuo.current = true;
+    track("interaccion");
+  };
+
   const compartir = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     const data = {
@@ -90,9 +99,11 @@ export default function CalculadoraCMR() {
     try {
       if (navigator.share) {
         await navigator.share(data);
+        track("compartir", { metodo: "nativo" });
         return;
       }
       await navigator.clipboard.writeText(url);
+      track("compartir", { metodo: "copiar" });
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2000);
     } catch {
@@ -263,7 +274,10 @@ export default function CalculadoraCMR() {
               min={0}
               step={1000}
               value={balance}
-              onChange={(e) => setBalance(Math.max(0, Number(e.target.value) || 0))}
+              onChange={(e) => {
+                setBalance(Math.max(0, Number(e.target.value) || 0));
+                marcarInteraccion();
+              }}
             />
           </div>
 
@@ -279,7 +293,10 @@ export default function CalculadoraCMR() {
                 max={5}
                 step={0.25}
                 value={pond}
-                onChange={(e) => setPond(Number(e.target.value))}
+                onChange={(e) => {
+                  setPond(Number(e.target.value));
+                  marcarInteraccion();
+                }}
               />
               <div className="pond-input">
                 <span className="pond-x">×</span>
@@ -292,6 +309,7 @@ export default function CalculadoraCMR() {
                   onChange={(e) => {
                     const v = Math.max(0, Math.min(5, Number(e.target.value) || 0));
                     setPond(Math.round(v * 100) / 100);
+                    marcarInteraccion();
                   }}
                 />
               </div>
@@ -402,7 +420,12 @@ export default function CalculadoraCMR() {
 
         <p className="fuente">
           Datos de gift cards y ponderador supuestos según lo publicado por el banco.{" "}
-          <a href="https://www.bancofalabella.cl/cmrpuntos" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://www.bancofalabella.cl/cmrpuntos"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("fuente_oficial")}
+          >
             Ver fuente oficial ↗
           </a>
         </p>
